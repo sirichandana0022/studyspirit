@@ -1,0 +1,172 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-syllabus",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dcce5af8-1d54-455d-ab67-8fd15782eebc",
+      "name": "Webhook",
+      "webhookId": "1fabf6b9-50eb-4abe-88fe-10b21057b334"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "df2e1a7a-828e-4347-a1d6-7d3c537cc69b",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert academic planner. A student named siri {{ $(\"Extract from File\").item.json.text }} has uploaded a course syllabus and requested a personalized study roadmap.  \nGo through the whole syllabus content and distribute the syllabus content into {{ $(\"Extract from File\").item.json.text }} weeks. Don’t miss out any topic.  \n\nFor each week, return:\n- title: a short, meaningful title  \n- topics: list of topics to cover that week  \n- objectives: what the student should achieve  \n- notes: short study advice  \n\nFormat your response as valid JSON in the following structure:\n```json\n{\n  \"roadmap\": [\n    {\n      \"week\": 1,\n      \"title\": \"string\",\n      \"topics\": [\"string\", \"...\"],\n      \"objectives\": [\"string\", \"...\"],\n      \"notes\": \"string\"\n    }\n  ]\n}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "format the output in structured  json format"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        460,
+        0
+      ],
+      "id": "85aac01f-6b0a-4f09-b56f-272737cb1077",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        480,
+        200
+      ],
+      "id": "08247618-657b-42af-a177-9543e6a7ba90",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "avA9Zv5BQIRwN8mJ",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.text;\nreturn {result:text};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        0
+      ],
+      "id": "4db31e7a-27d8-4fe8-a663-17a3d307b519",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        0
+      ],
+      "id": "b7af06e8-77e7-47eb-ad5d-8c65359f33e4",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e52a37d7-4183-4d77-bf68-932b046e5e11",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "452121c0a9e2b9c6602f905c5e4a8184e0bbe3844e12f0e683adfcb384cf6b99"
+  },
+  "id": "4sojDmR1M3R2IoZA",
+  "tags": []
+}
